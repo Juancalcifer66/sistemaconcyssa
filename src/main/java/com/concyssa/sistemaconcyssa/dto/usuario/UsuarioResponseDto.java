@@ -12,7 +12,7 @@ import java.util.Set;
 public class UsuarioResponseDto {
 
     private Long id;
-    private String username;
+    private String dni;
     private String email;
     private String nombreCompleto;
     private boolean estado;

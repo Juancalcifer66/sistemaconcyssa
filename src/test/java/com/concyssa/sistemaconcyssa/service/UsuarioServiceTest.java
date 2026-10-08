@@ -32,7 +32,7 @@ class UsuarioServiceTest {
     void setUp() {
         usuarioMock = new Usuario();
         usuarioMock.setId(1L);
-        usuarioMock.setUsername("testuser");
+        usuarioMock.setDni("12345678");
         usuarioMock.setEmail("test@concyssa.com");
     }
 
@@ -41,11 +41,12 @@ class UsuarioServiceTest {
         // Given
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuarioMock));
 
-        // When - CAMBIO AQUÍ: Usamos UsuarioResponseDto en lugar de Usuario
+        // When - Usamos UsuarioResponseDto
         UsuarioResponseDto resultado = usuarioService.buscarPorId(1L);
 
         // Then
         assertNotNull(resultado);
+        assertEquals("12345678", resultado.getDni());
         verify(usuarioRepository, times(1)).findById(1L);
     }
 

@@ -4,19 +4,21 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.util.Set;
 
 @Data
-@Schema(description = "Objeto necesario para crear un nuevo usuario")
+@Schema(description = "Objeto necesario para crear un nuevo usuario basado en DNI")
 public class UsuarioCreateDto {
 
-    @Schema(description = "Nombre de usuario para inicio de sesión", example = "jperez")
-    @NotBlank(message = "El nombre de usuario es obligatorio")
-    @Size(min = 4, max = 20, message = "El usuario debe tener entre 4 y 20 caracteres")
-    private String username;
+    @Schema(description = "DNI del usuario para inicio de sesión", example = "71234567")
+    @NotBlank(message = "El DNI es obligatorio")
+    @Size(min = 8, max = 8, message = "El DNI debe tener exactamente 8 dígitos")
+    @Pattern(regexp = "^\\d{8}$", message = "El DNI solo debe contener números enteros, sin espacios ni letras")
+    private String dni;
 
     @Schema(description = "Correo electrónico del usuario", example = "juan.perez@concyssa.com")
     @NotBlank(message = "El correo electrónico es obligatorio")

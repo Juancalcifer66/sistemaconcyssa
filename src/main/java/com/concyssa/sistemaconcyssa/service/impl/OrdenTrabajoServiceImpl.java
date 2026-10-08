@@ -38,13 +38,13 @@ public class OrdenTrabajoServiceImpl implements OrdenTrabajoService {
 
     @Override
     @Transactional
-    public OrdenTrabajoResponseDto crearOrden(OrdenTrabajoCreateDto dto, String usernameCreador) {
+    public OrdenTrabajoResponseDto crearOrden(OrdenTrabajoCreateDto dto, String dniCreador) {
         if (ordenTrabajoRepository.existsByCodigo(dto.getCodigo())) {
             throw new IllegalArgumentException("Ya existe una orden de trabajo con el codigo: " + dto.getCodigo());
         }
 
-        Usuario creador = usuarioRepository.findByUsername(usernameCreador)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario creador no encontrado: " + usernameCreador));
+        Usuario creador = usuarioRepository.findByDni(dniCreador)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario creador no encontrado con DNI: " + dniCreador));
 
         OrdenTrabajo orden = new OrdenTrabajo();
         orden.setCodigo(dto.getCodigo());
@@ -62,6 +62,44 @@ public class OrdenTrabajoServiceImpl implements OrdenTrabajoService {
 
         OrdenTrabajo guardada = ordenTrabajoRepository.save(orden);
         return mapToResponseDto(guardada);
+    }
+
+    @Override
+    @Transactional
+    public OrdenTrabajoResponseDto actualizarOrden(Long id, OrdenTrabajoCreateDto dto) {
+        OrdenTrabajo orden = ordenTrabajoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Orden de trabajo no encontrada con ID: " + id));
+
+        // Validar si el código cambió y ya pertenece a otra orden
+        if (!orden.getCodigo().equals(dto.getCodigo()) && ordenTrabajoRepository.existsByCodigo(dto.getCodigo())) {
+            throw new IllegalArgumentException("Ya existe otra orden de trabajo con el código: " + dto.getCodigo());
+        }
+
+        orden.setCodigo(dto.getCodigo());
+        orden.setDescripcion(dto.getDescripcion());
+        orden.setDireccion(dto.getDireccion());
+        orden.setPrioridad(dto.getPrioridad());
+        orden.setFechaProgramada(dto.getFechaProgramada());
+
+        if (dto.getOperadorAsignadoId() != null) {
+            Usuario operador = usuarioRepository.findById(dto.getOperadorAsignadoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Operador no encontrado con ID: " + dto.getOperadorAsignadoId()));
+            orden.setOperadorAsignado(operador);
+        } else {
+            orden.setOperadorAsignado(null);
+        }
+
+        OrdenTrabajo actualizada = ordenTrabajoRepository.save(orden);
+        return mapToResponseDto(actualizada);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarOrden(Long id) {
+        if (!ordenTrabajoRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Orden de trabajo no encontrada con ID: " + id);
+        }
+        ordenTrabajoRepository.deleteById(id);
     }
 
     @Override
@@ -90,12 +128,12 @@ public class OrdenTrabajoServiceImpl implements OrdenTrabajoService {
 
     @Override
     @Transactional
-    public OrdenTrabajoResponseDto actualizarEstado(Long id, EstadoOrden nuevoEstado, String observacion, String usernameAccion) {
+    public OrdenTrabajoResponseDto actualizarEstado(Long id, EstadoOrden nuevoEstado, String observacion, String dniAccion) {
         OrdenTrabajo orden = ordenTrabajoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Orden de trabajo no encontrada con ID: " + id));
 
-        Usuario usuarioAccion = usuarioRepository.findByUsername(usernameAccion)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + usernameAccion));
+        Usuario usuarioAccion = usuarioRepository.findByDni(dniAccion)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con DNI: " + dniAccion));
 
         EstadoOrden estadoAnterior = orden.getEstado();
 
@@ -128,7 +166,7 @@ public class OrdenTrabajoServiceImpl implements OrdenTrabajoService {
                 .map(h -> new HistorialOrdenResponseDto(
                         h.getId(),
                         h.getOrdenTrabajo().getId(),
-                        h.getUsuario().getUsername(),
+                        h.getUsuario().getDni(),
                         h.getEstadoAnterior(),
                         h.getEstadoNuevo(),
                         h.getObservacion(),
@@ -138,7 +176,7 @@ public class OrdenTrabajoServiceImpl implements OrdenTrabajoService {
     }
 
     private OrdenTrabajoResponseDto mapToResponseDto(OrdenTrabajo orden) {
-        String operadorUsername = orden.getOperadorAsignado() != null ? orden.getOperadorAsignado().getUsername() : null;
+        String operadorDni = orden.getOperadorAsignado() != null ? orden.getOperadorAsignado().getDni() : null;
 
         return new OrdenTrabajoResponseDto(
                 orden.getId(),
@@ -149,8 +187,8 @@ public class OrdenTrabajoServiceImpl implements OrdenTrabajoService {
                 orden.getPrioridad(),
                 orden.getFechaCreacion(),
                 orden.getFechaProgramada(),
-                orden.getCreador().getUsername(),
-                operadorUsername
+                orden.getCreador().getDni(),
+                operadorDni
         );
     }
 }

@@ -2,7 +2,6 @@ package com.concyssa.sistemaconcyssa.controller;
 
 import com.concyssa.sistemaconcyssa.dto.error.ErrorResponseDto;
 import com.concyssa.sistemaconcyssa.dto.orden.ActualizarEstadoRequestDto;
-import com.concyssa.sistemaconcyssa.dto.orden.HistorialOrdenResponseDto;
 import com.concyssa.sistemaconcyssa.dto.orden.OrdenTrabajoCreateDto;
 import com.concyssa.sistemaconcyssa.dto.orden.OrdenTrabajoResponseDto;
 import com.concyssa.sistemaconcyssa.enums.EstadoOrden;
@@ -92,7 +91,7 @@ public class OrdenTrabajoController {
         return ResponseEntity.ok(ordenTrabajoService.obtenerPorId(id));
     }
 
-    @Operation(summary = "Crear una nueva orden de trabajo", description = "Registra una nueva orden de trabajo en el sistema asignando el usuario creador.")
+    @Operation(summary = "Crear una nueva orden de trabajo", description = "Registra una nueva orden de trabajo en el sistema asignando el usuario creador a partir de su DNI.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Orden de trabajo creada exitosamente"),
         @ApiResponse(
@@ -110,19 +109,22 @@ public class OrdenTrabajoController {
     public ResponseEntity<OrdenTrabajoResponseDto> crearOrden(
             @Valid @RequestBody OrdenTrabajoCreateDto dto,
             Authentication authentication) {
-        String usernameCreador = authentication.getName();
-        return new ResponseEntity<>(ordenTrabajoService.crearOrden(dto, usernameCreador), HttpStatus.CREATED);
+        String dniCreador = authentication.getName();
+        return new ResponseEntity<>(ordenTrabajoService.crearOrden(dto, dniCreador), HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Obtener el historial de cambios de una orden", description = "Retorna la traza de auditoría de los cambios de estado sufridos por la orden de trabajo.")
+    @Operation(summary = "Actualizar completamente una orden de trabajo", description = "Permite modificar los datos generales de una orden existente por ID.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Historial obtenido exitosamente"),
+        @ApiResponse(responseCode = "200", description = "Orden actualizada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos"),
         @ApiResponse(responseCode = "404", description = "Orden de trabajo no encontrada")
     })
-    @GetMapping("/{id}/historial")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR', 'SUPERVISOR')")
-    public ResponseEntity<List<HistorialOrdenResponseDto>> obtenerHistorial(@PathVariable Long id) {
-        return ResponseEntity.ok(ordenTrabajoService.obtenerHistorialPorOrden(id));
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERVISOR')")
+    public ResponseEntity<OrdenTrabajoResponseDto> actualizarOrden(
+            @PathVariable Long id,
+            @Valid @RequestBody OrdenTrabajoCreateDto dto) {
+        return ResponseEntity.ok(ordenTrabajoService.actualizarOrden(id, dto));
     }
 
     @Operation(summary = "Actualizar estado de una orden de trabajo", description = "Permite cambiar el estado de una orden (PENDIENTE, EN_PROCESO, ATENDIDA, CANCELADA). Requiere rol OPERADOR, SUPERVISOR o ADMIN.")
@@ -167,15 +169,27 @@ public class OrdenTrabajoController {
             @Valid @RequestBody ActualizarEstadoRequestDto dto,
             Authentication authentication) {
 
-        String usernameAccion = authentication.getName();
+        String dniAccion = authentication.getName();
 
         OrdenTrabajoResponseDto ordenActualizada = ordenTrabajoService.actualizarEstado(
                 id,
                 dto.getNuevoEstado(),
                 dto.getObservacion(),
-                usernameAccion
+                dniAccion
         );
 
         return ResponseEntity.ok(ordenActualizada);
+    }
+
+    @Operation(summary = "Eliminar una orden de trabajo", description = "Elimina una orden de trabajo por su ID. Restringido exclusivamente al rol ADMIN.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Orden de trabajo eliminada exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Orden de trabajo no encontrada")
+    })
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> eliminarOrden(@PathVariable Long id) {
+        ordenTrabajoService.eliminarOrden(id);
+        return ResponseEntity.noContent().build();
     }
 }

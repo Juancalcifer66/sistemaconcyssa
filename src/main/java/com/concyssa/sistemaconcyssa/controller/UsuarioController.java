@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,6 +31,33 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Operation(summary = "Obtener perfil del usuario autenticado", description = "Retorna los datos del usuario que ha iniciado sesión utilizando el DNI extraído del token JWT.")
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Perfil obtenido exitosamente",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = UsuarioResponseDto.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "401", 
+            description = "No autorizado",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
+        )
+    })
+    @GetMapping("/me")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CONTROLADOR', 'SUPERVISOR')")
+    public ResponseEntity<UsuarioResponseDto> obtenerPerfilActual(Authentication authentication) {
+        String dni = authentication.getName(); // El DNI se extrae directamente del token
+        UsuarioResponseDto perfil = usuarioService.obtenerPorDni(dni);
+        return ResponseEntity.ok(perfil);
+    }
 
     @Operation(summary = "Listar todos los usuarios", description = "Obtiene una lista con todos los usuarios registrados en el sistema.")
     @ApiResponses(value = {
@@ -57,6 +85,17 @@ public class UsuarioController {
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPERVISOR')")
     public ResponseEntity<List<UsuarioResponseDto>> listarUsuarios() {
         return ResponseEntity.ok(usuarioService.listarTodos());
+    }
+
+    @Operation(summary = "Listar controladores disponibles", description = "Obtiene una lista de todos los usuarios con rol de controlador activos para la asignación de órdenes.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de controladores obtenida exitosamente"),
+        @ApiResponse(responseCode = "401", description = "No autorizado")
+    })
+    @GetMapping("/controladores")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERVISOR')")
+    public ResponseEntity<List<UsuarioResponseDto>> listarControladores() {
+        return ResponseEntity.ok(usuarioService.listarControladores());
     }
 
     @Operation(summary = "Obtener detalles de un usuario por ID", description = "Retorna los datos detallados de un usuario específico según su ID.")
@@ -95,6 +134,51 @@ public class UsuarioController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UsuarioResponseDto> crearUsuario(@Valid @RequestBody UsuarioCreateDto dto) {
         return new ResponseEntity<>(usuarioService.crearUsuario(dto), HttpStatus.CREATED);
+    }
+
+    @Operation(summary = "Actualizar un usuario existente", description = "Modifica los datos de un usuario existente según su ID.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Usuario actualizado exitosamente"),
+        @ApiResponse(
+            responseCode = "404", 
+            description = "Usuario no encontrado",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400", 
+            description = "Datos inválidos o campos duplicados",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
+        )
+    })
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UsuarioResponseDto> actualizarUsuario(@PathVariable Long id, @Valid @RequestBody UsuarioCreateDto dto) {
+        return ResponseEntity.ok(usuarioService.actualizarUsuario(id, dto));
+    }
+
+    @Operation(summary = "Eliminar un usuario", description = "Elimina de forma definitiva un usuario del sistema según su ID.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Usuario eliminado exitosamente"),
+        @ApiResponse(
+            responseCode = "404", 
+            description = "Usuario no encontrado",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponseDto.class)
+            )
+        )
+    })
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> eliminarUsuario(@PathVariable Long id) {
+        usuarioService.eliminarUsuario(id);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Cambiar estado de un usuario (activar/desactivar)", description = "Permite alternar el estado habilitado/inhabilitado de un usuario por su ID.")

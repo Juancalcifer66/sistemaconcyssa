@@ -1,6 +1,9 @@
 package com.concyssa.sistemaconcyssa.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,16 +21,21 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
-    private String username;
+    @NotBlank(message = "El DNI es obligatorio")
+    @Size(min = 8, max = 8, message = "El DNI debe tener exactamente 8 dígitos")
+    @Pattern(regexp = "^\\d{8}$", message = "El DNI solo debe contener números enteros, sin espacios ni letras")
+    @Column(nullable = false, unique = true, length = 8)
+    private String dni;
 
+    @NotBlank(message = "La contraseña es obligatoria")
     @Column(nullable = false)
     private String password;
 
+    @NotBlank(message = "El nombre completo es obligatorio")
     @Column(nullable = false, length = 100)
     private String nombreCompleto;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = true, unique = true, length = 100)
     private String email;
 
     @Builder.Default

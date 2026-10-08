@@ -49,15 +49,15 @@ class OrdenTrabajoServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Usuario que realiza las acciones en las pruebas
+        // Usuario que realiza las acciones en las pruebas (usando DNI de 8 dígitos)
         usuarioEjemplo = new Usuario();
         usuarioEjemplo.setId(1L);
-        usuarioEjemplo.setUsername("operador1");
+        usuarioEjemplo.setDni("12345678");
 
         // Usuario creador para evitar NullPointerException en mapToResponseDto
         creadorEjemplo = new Usuario();
         creadorEjemplo.setId(2L);
-        creadorEjemplo.setUsername("admin");
+        creadorEjemplo.setDni("87654321");
 
         // Orden de prueba base completamente poblada
         ordenEjemplo = crearOrdenMock(10L, "OT-2026-001", EstadoOrden.PENDIENTE, PrioridadOrden.ALTA);
@@ -70,15 +70,15 @@ class OrdenTrabajoServiceTest {
         Long ordenId = 10L;
         EstadoOrden nuevoEstado = EstadoOrden.EN_PROCESO;
         String observacion = "Se inicia la revisión técnica en campo.";
-        String usernameAccion = "operador1";
+        String dniAccion = "12345678";
 
         when(ordenTrabajoRepository.findById(ordenId)).thenReturn(Optional.of(ordenEjemplo));
-        when(usuarioRepository.findByUsername(usernameAccion)).thenReturn(Optional.of(usuarioEjemplo));
+        when(usuarioRepository.findByDni(dniAccion)).thenReturn(Optional.of(usuarioEjemplo));
         when(ordenTrabajoRepository.save(any(OrdenTrabajo.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
         OrdenTrabajoResponseDto resultado = ordenTrabajoService.actualizarEstado(
-                ordenId, nuevoEstado, observacion, usernameAccion
+                ordenId, nuevoEstado, observacion, dniAccion
         );
 
         // Assert - Respuesta DTO
@@ -112,7 +112,7 @@ class OrdenTrabajoServiceTest {
         // Act & Assert
         ResourceNotFoundException excepcion = assertThrows(
                 ResourceNotFoundException.class,
-                () -> ordenTrabajoService.actualizarEstado(ordenIdInexistente, EstadoOrden.EN_PROCESO, "Observación", "admin")
+                () -> ordenTrabajoService.actualizarEstado(ordenIdInexistente, EstadoOrden.EN_PROCESO, "Observación", "87654321")
         );
 
         assertNotNull(excepcion);
@@ -128,15 +128,15 @@ class OrdenTrabajoServiceTest {
     void actualizarEstado_UsuarioNoEncontrado_LanzaExcepcion() {
         // Arrange
         Long ordenId = 10L;
-        String usernameInexistente = "usuario_fantasma";
+        String dniInexistente = "00000000";
 
         when(ordenTrabajoRepository.findById(ordenId)).thenReturn(Optional.of(ordenEjemplo));
-        when(usuarioRepository.findByUsername(usernameInexistente)).thenReturn(Optional.empty());
+        when(usuarioRepository.findByDni(dniInexistente)).thenReturn(Optional.empty());
 
         // Act & Assert
         ResourceNotFoundException excepcion = assertThrows(
                 ResourceNotFoundException.class,
-                () -> ordenTrabajoService.actualizarEstado(ordenId, EstadoOrden.EN_PROCESO, "Observación", usernameInexistente)
+                () -> ordenTrabajoService.actualizarEstado(ordenId, EstadoOrden.EN_PROCESO, "Observación", dniInexistente)
         );
 
         assertNotNull(excepcion);

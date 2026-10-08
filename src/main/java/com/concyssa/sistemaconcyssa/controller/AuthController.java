@@ -33,7 +33,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-@Tag(name = "Autenticación", description = "Endpoints para el registro, login y generación de tokens JWT")
+@Tag(name = "Autenticación", description = "Endpoints para el registro, login y generación de tokens JWT basados en DNI")
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*")
@@ -56,7 +56,7 @@ public class AuthController {
 
     @Operation(
         summary = "Registrar un usuario", 
-        description = "Permite registrar un usuario en el sistema asignando los roles especificados en la solicitud."
+        description = "Permite registrar un usuario en el sistema usando su DNI y asignando los roles especificados."
     )
     @ApiResponses(value = {
         @ApiResponse(
@@ -65,7 +65,7 @@ public class AuthController {
         ),
         @ApiResponse(
             responseCode = "400", 
-            description = "El nombre de usuario o email ya existe, o datos de solicitud inválidos",
+            description = "El DNI o email ya existe, o datos de solicitud inválidos",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDto.class))
         ),
         @ApiResponse(
@@ -76,16 +76,16 @@ public class AuthController {
     })
     @PostMapping("/registrar")
     public ResponseEntity<String> registrarUsuario(@Valid @RequestBody UsuarioCreateDto dto) {
-        if (usuarioRepository.existsByUsername(dto.getUsername())) {
-            throw new IllegalArgumentException("El nombre de usuario ya existe.");
+        if (usuarioRepository.existsByDni(dto.getDni())) {
+            throw new IllegalArgumentException("El DNI ya está registrado.");
         }
 
-        if (usuarioRepository.existsByEmail(dto.getEmail())) {
+        if (dto.getEmail() != null && !dto.getEmail().isEmpty() && usuarioRepository.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("El email ya está registrado.");
         }
 
         Usuario usuario = new Usuario();
-        usuario.setUsername(dto.getUsername());
+        usuario.setDni(dto.getDni());
         usuario.setEmail(dto.getEmail());
         usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         usuario.setNombreCompleto(dto.getNombreCompleto() != null ? dto.getNombreCompleto() : "Usuario del Sistema");
@@ -94,8 +94,8 @@ public class AuthController {
         Set<Rol> roles = new HashSet<>();
 
         if (dto.getRoles() == null || dto.getRoles().isEmpty()) {
-            Rol defaultRole = rolRepository.findByNombre(RolNombre.ROLE_OPERADOR)
-                    .orElseThrow(() -> new RuntimeException("Error: El rol ROLE_OPERADOR no existe en la base de datos."));
+            Rol defaultRole = rolRepository.findByNombre(RolNombre.ROLE_CONTROLADOR)
+                    .orElseThrow(() -> new RuntimeException("Error: El rol ROLE_CONTROLADOR no existe en la base de datos."));
             roles.add(defaultRole);
         } else {
             for (String rolStr : dto.getRoles()) {
@@ -124,7 +124,7 @@ public class AuthController {
         return new ResponseEntity<>("Usuario registrado exitosamente.", HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Iniciar sesión", description = "Autentica al usuario y retorna el token JWT")
+    @Operation(summary = "Iniciar sesión", description = "Autentica al usuario usando su DNI y contraseña, retornando el token JWT")
     @ApiResponses(value = {
         @ApiResponse(
             responseCode = "200", 
@@ -139,37 +139,31 @@ public class AuthController {
             description = "Formato de credenciales inválido",
             content = @Content(
                 mediaType = "application/json",
-                schema = @Schema(implementation = ErrorResponseDto.class),
-                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                    value = "{\n  \"timestamp\": \"2026-10-03T21:45:23Z\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Los datos ingresados no son válidos\",\n  \"path\": \"/api/auth/login\"\n}"
-                )
+                schema = @Schema(implementation = ErrorResponseDto.class)
             )
         ),
         @ApiResponse(
             responseCode = "401", 
-            description = "Credenciales inválidas (usuario o contraseña incorrectos)",
+            description = "Credenciales inválidas (DNI o contraseña incorrectos)",
             content = @Content(
                 mediaType = "application/json",
-                schema = @Schema(implementation = ErrorResponseDto.class),
-                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                    value = "{\n  \"timestamp\": \"2026-10-03T21:45:23Z\",\n  \"status\": 401,\n  \"error\": \"Unauthorized\",\n  \"message\": \"Credenciales inválidas. Verifique su usuario y contraseña.\",\n  \"path\": \"/api/auth/login\"\n}"
-                )
+                schema = @Schema(implementation = ErrorResponseDto.class)
             )
         )
     })
     @PostMapping("/login")
     public ResponseEntity<JwtResponseDto> loginUsuario(@Valid @RequestBody LoginRequestDto dto) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(dto.getUsername(), dto.getPassword())
+                new UsernamePasswordAuthenticationToken(dto.getDni(), dto.getPassword())
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String token = jwtProvider.generarToken(authentication);
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername(dto.getUsername());
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByDni(dto.getDni());
 
-        String email = usuarioOpt.isPresent() ? usuarioOpt.get().getEmail() : "";
-        JwtResponseDto respuesta = new JwtResponseDto(token, dto.getUsername(), email);
+        String email = (usuarioOpt.isPresent() && usuarioOpt.get().getEmail() != null) ? usuarioOpt.get().getEmail() : "";
+        JwtResponseDto respuesta = new JwtResponseDto(token, dto.getDni(), email);
 
         return ResponseEntity.ok(respuesta);
     }

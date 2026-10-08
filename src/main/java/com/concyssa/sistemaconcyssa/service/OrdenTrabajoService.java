@@ -19,6 +19,9 @@ public interface OrdenTrabajoService {
     List<OrdenTrabajoResponseDto> listarTodas();
 
     OrdenTrabajoResponseDto obtenerPorId(Long id);
+    
+    OrdenTrabajoResponseDto actualizarOrden(Long id, OrdenTrabajoCreateDto dto);
+    void eliminarOrden(Long id);
 
     // Firma actualizada para incluir observación y el usuario que realiza la acción
     OrdenTrabajoResponseDto actualizarEstado(Long id, EstadoOrden nuevoEstado, String observacion, String usernameAccion);
