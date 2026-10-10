@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.security.core.AuthenticationException;
 
 @Tag(name = "Autenticación", description = "Endpoints para el registro, login y generación de tokens JWT basados en DNI")
 @RestController
@@ -86,6 +88,7 @@ public class AuthController {
 
         Usuario usuario = new Usuario();
         usuario.setDni(dto.getDni());
+        usuario.setUsername(dto.getDni());
         usuario.setEmail(dto.getEmail());
         usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         usuario.setNombreCompleto(dto.getNombreCompleto() != null ? dto.getNombreCompleto() : "Usuario del Sistema");
@@ -119,6 +122,7 @@ public class AuthController {
         }
 
         usuario.setRoles(roles);
+        
         usuarioRepository.save(usuario);
 
         return new ResponseEntity<>("Usuario registrado exitosamente.", HttpStatus.CREATED);
@@ -152,19 +156,28 @@ public class AuthController {
         )
     })
     @PostMapping("/login")
-    public ResponseEntity<JwtResponseDto> loginUsuario(@Valid @RequestBody LoginRequestDto dto) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(dto.getDni(), dto.getPassword())
-        );
+    public ResponseEntity<?> loginUsuario(@Valid @RequestBody LoginRequestDto dto) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(dto.getDni(), dto.getPassword())
+            );
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String token = jwtProvider.generarToken(authentication);
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByDni(dto.getDni());
+            String token = jwtProvider.generarToken(authentication);
+            Optional<Usuario> usuarioOpt = usuarioRepository.findByDni(dto.getDni());
 
-        String email = (usuarioOpt.isPresent() && usuarioOpt.get().getEmail() != null) ? usuarioOpt.get().getEmail() : "";
-        JwtResponseDto respuesta = new JwtResponseDto(token, dto.getDni(), email);
+            String email = (usuarioOpt.isPresent() && usuarioOpt.get().getEmail() != null) ? usuarioOpt.get().getEmail() : "";
+            JwtResponseDto respuesta = new JwtResponseDto(token, dto.getDni(), email);
 
-        return ResponseEntity.ok(respuesta);
+            return ResponseEntity.ok(respuesta);
+
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("DNI o contraseña incorrectos");
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor: " + e.getMessage());
+        }
     }
 }

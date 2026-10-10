@@ -6,18 +6,23 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-@Schema(description = "DTO para registrar la visita de terceros")
+@Schema(description = "DTO para registrar una visita de terceros en campo")
 public class VisitaTerceroCreateDto {
 
+    @Schema(description = "Número de sistema asociado", example = "181")
     @NotNull(message = "El número de sistema es obligatorio")
-    @Schema(description = "Número de sistema", example = "4050")
     private Integer numeroSistema;
 
-    @NotBlank(message = "La descripción es obligatoria")
-    @Schema(description = "Motivo o descripción de la visita", example = "Inspección de medidores por empresa contratista externa")
-    private String descripcion;
+    @Schema(description = "Estación o ubicación visitada", example = "Rp-01")
+    private String estacion;
 
-    @NotBlank(message = "Los datos de control son obligatorios")
-    @Schema(description = "Datos de control (DNI, nombres, empresa)", example = "Juan Quispe - Contr. HydroS.A. - DNI 45879621")
-    private String datosControl;
+    @Schema(description = "Nombre de la empresa externa o contratista", example = "Contratistas Generales S.A.C.")
+    @NotBlank(message = "El nombre de la empresa es obligatorio")
+    private String nombreEmpresa;
+
+    @Schema(description = "Motivo u objetivo de la visita", example = "Verificación de niveles y estado de compuertas")
+    private String motivo;
+
+    @Schema(description = "Observaciones de la visita", example = "Operación estable sin anomalías detectadas.")
+    private String observaciones;
 }

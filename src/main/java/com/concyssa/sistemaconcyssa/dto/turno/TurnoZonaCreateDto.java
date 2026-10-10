@@ -1,28 +1,26 @@
 package com.concyssa.sistemaconcyssa.dto.turno;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-import java.time.LocalDate;
-
 @Data
-@Schema(description = "DTO para asignar un turno y zona a un controlador")
+@Schema(description = "DTO para la gestión y programación mensual de supervisores por zona y turno")
 public class TurnoZonaCreateDto {
 
-    @NotNull(message = "La fecha es obligatoria")
-    @Schema(description = "Fecha del cronograma", example = "2026-10-08")
-    private LocalDate fecha;
+    @NotBlank(message = "El mes es obligatorio")
+    @Schema(description = "Mes de programación", example = "Octubre 2026")
+    private String mes;
 
-    @NotNull(message = "El turno es obligatorio")
-    @Schema(description = "Turno de trabajo", example = "MAÑANA")
-    private String turno;
+    @NotBlank(message = "El nombre y apellido completo es obligatorio")
+    @Schema(description = "Nombre y apellido completo del supervisor", example = "Carlos Alberto Mendoza Ramos")
+    private String nombreCompleto;
 
-    @NotNull(message = "La zona es obligatoria")
-    @Schema(description = "Zona o estación asignada", example = "Reservorio Sur - Sector 2")
+    @NotBlank(message = "La zona es obligatoria")
+    @Schema(description = "Zona de trabajo asignada (Zona Alta, Zona Baja, Zona Centro)", example = "Zona Alta")
     private String zona;
 
-    @NotNull(message = "El ID del controlador es obligatorio")
-    @Schema(description = "ID del usuario controlador", example = "3")
-    private Long controladorId;
+    @NotBlank(message = "El turno es obligatorio")
+    @Schema(description = "Turno de trabajo (Mañana, Tarde, Noche)", example = "Mañana")
+    private String turno;
 }

@@ -2,6 +2,7 @@ package com.concyssa.sistemaconcyssa.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "visitas_terceros")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class VisitaTercero {
@@ -21,19 +23,23 @@ public class VisitaTercero {
     @Column(nullable = false)
     private Integer numeroSistema;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
-    private String descripcion;
+    private String estacion;
 
-    @Column(nullable = false, length = 100)
-    private String datosControl; // Ej: Empresa contratista, fotocheck, DNI del visitante
+    @Column(name = "nombre_empresa", nullable = false)
+    private String nombreEmpresa;
 
-    @Column(length = 255)
+    private String motivo;
+
+    @Column(columnDefinition = "TEXT")
+    private String observaciones;
+
+    @Column(name = "foto_url")
     private String fotoUrl;
 
-    @Column(nullable = false)
+    @Column(name = "fecha_visita", nullable = false)
     private LocalDateTime fechaVisita;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false)
+    @JoinColumn(name = "controlador_id", nullable = false)
     private Usuario controlador;
 }

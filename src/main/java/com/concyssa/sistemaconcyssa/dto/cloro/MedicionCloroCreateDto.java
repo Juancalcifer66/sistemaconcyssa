@@ -8,13 +8,17 @@ import lombok.Data;
 @Schema(description = "DTO para registrar la medición de cloro")
 public class MedicionCloroCreateDto {
 
-    @NotNull(message = "El valor de cloro en mg/L es obligatorio")
-    @Schema(description = "Valor decimal de cloro medido en mg/L", example = "1.25")
-    private Double valorCloroMgL;
+    @Schema(description = "Número de sistema", example = "181")
+    @NotNull(message = "El número de sistema es obligatorio")
+    private Integer numeroSistema;
 
-    @Schema(description = "Ubicación o punto de muestreo", example = "Reservorio R-3 / Válvula de salida")
+    @Schema(description = "Ubicación o punto de estación", example = "Rp-01")
     private String ubicacionPunto;
 
-    @Schema(description = "Observación opcional", example = "Nivel óptimo dentro del rango permitido")
+    @Schema(description = "Valor de cloro medido en mg/L", example = "1.25")
+    @NotNull(message = "El valor de cloro es obligatorio")
+    private Double valorCloroMgL;
+
+    @Schema(description = "Observaciones de la medición", example = "Nivel dentro de los parámetros normales")
     private String observacion;
 }

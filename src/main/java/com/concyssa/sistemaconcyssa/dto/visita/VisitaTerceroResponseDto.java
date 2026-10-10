@@ -14,8 +14,10 @@ import java.time.LocalDateTime;
 public class VisitaTerceroResponseDto {
     private Long id;
     private Integer numeroSistema;
-    private String descripcion;
-    private String datosControl;
+    private String estacion;
+    private String nombreEmpresa;
+    private String motivo;
+    private String observaciones;
     private String fotoUrl;
     private LocalDateTime fechaVisita;
     private String controladorNombre;

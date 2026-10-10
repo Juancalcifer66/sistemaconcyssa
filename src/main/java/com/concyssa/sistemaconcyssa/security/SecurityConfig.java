@@ -45,6 +45,10 @@ public class SecurityConfig {
                     "/v3/api-docs/**",
                     "/swagger-ui.html"
                 ).permitAll()
+                // Permitir acceso completo a la programación de supervisores para ADMIN y SUPERVISOR
+                .requestMatchers("/api/admin/programacion-supervisores/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERVISOR", "ADMIN", "SUPERVISOR")
+                // Rutas específicas del supervisor y dashboard de reportes
+                .requestMatchers("/api/supervisor/**").hasAnyAuthority("ROLE_SUPERVISOR", "ROLE_ADMIN", "SUPERVISOR", "ADMIN")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

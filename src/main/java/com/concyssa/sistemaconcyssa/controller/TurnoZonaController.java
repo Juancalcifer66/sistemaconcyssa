@@ -15,33 +15,31 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/turnos")
+@RequestMapping("/api/admin/programacion-supervisores")
+@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERVISOR', 'ADMIN', 'SUPERVISOR')")
 @RequiredArgsConstructor
-@Tag(name = "Cronograma de Turnos y Zonas", description = "Gestión y consulta de turnos mensuales para supervisores y controladores")
+@Tag(name = "Programación de Supervisores", description = "Gestión de turnos y zonas por mes para Administradores y Supervisores")
 public class TurnoZonaController {
 
     private final TurnoZonaService service;
 
-    @Operation(summary = "Asignar turno y zona (Solo Admin/Supervisor)")
+    @Operation(summary = "Obtener asignaciones por mes")
+    @GetMapping("/mes/{mes}")
+    public ResponseEntity<List<TurnoZonaResponseDto>> obtenerPorMes(@PathVariable String mes) {
+        return ResponseEntity.ok(service.listarPorMes(mes));
+    }
+
+    @Operation(summary = "Registrar nueva asignación de supervisor")
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERVISOR')")
-    public ResponseEntity<TurnoZonaResponseDto> asignarTurno(@Valid @RequestBody TurnoZonaCreateDto dto) {
-        return new ResponseEntity<>(service.asignarTurno(dto), HttpStatus.CREATED);
+    public ResponseEntity<TurnoZonaResponseDto> crear(@Valid @RequestBody TurnoZonaCreateDto dto) {
+        return new ResponseEntity<>(service.guardarProgramacion(dto), HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Listar cronograma mensual (Solo lectura para Supervisores y Controladores)")
-    @GetMapping("/mes")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERVISOR', 'CONTROLADOR')")
-    public ResponseEntity<List<TurnoZonaResponseDto>> listarPorMes(
-            @RequestParam int anio,
-            @RequestParam int mes) {
-        return ResponseEntity.ok(service.listarPorMes(anio, mes));
-    }
-
-    @Operation(summary = "Listar todo el cronograma histórico")
-    @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERVISOR')")
-    public ResponseEntity<List<TurnoZonaResponseDto>> listarTodos() {
-        return ResponseEntity.ok(service.listarTodos());
+    @Operation(summary = "Modificar mes, zona o turno de supervisor")
+    @PutMapping("/{id}")
+    public ResponseEntity<TurnoZonaResponseDto> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody TurnoZonaCreateDto dto) {
+        return ResponseEntity.ok(service.actualizarProgramacion(id, dto));
     }
 }

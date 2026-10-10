@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,21 +27,21 @@ public class DanioFallaController {
 
     private final DanioFallaService danioFallaService;
 
-    @Operation(summary = "Registrar daño o falla", description = "Permite al controlador reportar un daño o falla adjuntando una descripción detallada y opcionalmente una foto.")
+    @Operation(summary = "Registrar daño o falla", description = "Permite al controlador reportar un daño o falla enviando la información en formato JSON.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Reporte de daño registrado exitosamente"),
             @ApiResponse(responseCode = "400", description = "Datos inválidos"),
             @ApiResponse(responseCode = "401", description = "No autorizado")
     })
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping
     @PreAuthorize("hasRole('CONTROLADOR')")
     public ResponseEntity<DanioFallaResponseDto> registrarDanio(
-            @RequestPart("danio") DanioFallaCreateDto dto,
-            @RequestPart(value = "foto", required = false) MultipartFile foto,
+            @Valid @RequestBody DanioFallaCreateDto dto,
             Authentication authentication) {
 
         String dniControlador = authentication.getName();
-        DanioFallaResponseDto response = danioFallaService.registrarDanio(dto, foto, dniControlador);
+        // Pasamos null en la foto temporalmente mientras pruebas el JSON
+        DanioFallaResponseDto response = danioFallaService.registrarDanio(dto, null, dniControlador);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 

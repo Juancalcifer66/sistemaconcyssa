@@ -26,6 +26,9 @@ public class Usuario {
     @Pattern(regexp = "^\\d{8}$", message = "El DNI solo debe contener números enteros, sin espacios ni letras")
     @Column(nullable = false, unique = true, length = 8)
     private String dni;
+    
+    @Column(nullable = true, unique = true, length = 50)
+    private String username;
 
     @NotBlank(message = "La contraseña es obligatoria")
     @Column(nullable = false)

@@ -2,14 +2,15 @@ package com.concyssa.sistemaconcyssa.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "niveles_reservorios")
+@Table(name = "niveles_reservorio")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class NivelReservorio {
@@ -18,25 +19,26 @@ public class NivelReservorio {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "numero_sistema")
     private Integer numeroSistema;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "estacion", length = 100)
     private String estacion;
 
-    @Column(nullable = false)
+    @Column(name = "pasos_llenos")
     private Integer pasosLlenos;
 
-    @Column(nullable = false)
+    @Column(name = "pasos_libres")
     private Integer pasosLibres;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "observacion")
     private String observacion;
 
-    @Column(nullable = false)
-    private LocalDateTime fechaRegistro;
+    @Builder.Default
+    @Column(name = "fecha_registro", nullable = false)
+    private LocalDateTime fechaRegistro = LocalDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false)
+    @JoinColumn(name = "usuario_id")
     private Usuario controlador;
 }

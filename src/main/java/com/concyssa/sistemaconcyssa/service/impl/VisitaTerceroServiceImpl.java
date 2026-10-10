@@ -39,8 +39,10 @@ public class VisitaTerceroServiceImpl implements VisitaTerceroService {
 
         VisitaTercero entidad = new VisitaTercero();
         entidad.setNumeroSistema(dto.getNumeroSistema());
-        entidad.setDescripcion(dto.getDescripcion());
-        entidad.setDatosControl(dto.getDatosControl());
+        entidad.setEstacion(dto.getEstacion());
+        entidad.setNombreEmpresa(dto.getNombreEmpresa());
+        entidad.setMotivo(dto.getMotivo());
+        entidad.setObservaciones(dto.getObservaciones());
         entidad.setFotoUrl(nombreArchivo);
         entidad.setFechaVisita(LocalDateTime.now());
         entidad.setControlador(controlador);
@@ -65,8 +67,10 @@ public class VisitaTerceroServiceImpl implements VisitaTerceroService {
         return new VisitaTerceroResponseDto(
                 e.getId(),
                 e.getNumeroSistema(),
-                e.getDescripcion(),
-                e.getDatosControl(),
+                e.getEstacion(),
+                e.getNombreEmpresa(),
+                e.getMotivo(),
+                e.getObservaciones(),
                 e.getFotoUrl(),
                 e.getFechaVisita(),
                 e.getControlador().getNombreCompleto()

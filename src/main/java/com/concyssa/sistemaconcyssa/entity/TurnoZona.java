@@ -1,17 +1,15 @@
 package com.concyssa.sistemaconcyssa.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
-import java.time.LocalDate;
-
-@Entity
-@Table(name = "cronograma_turnos_zonas")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "programacion_supervisores")
 public class TurnoZona {
 
     @Id
@@ -19,15 +17,14 @@ public class TurnoZona {
     private Long id;
 
     @Column(nullable = false)
-    private LocalDate fecha; // Fecha específica del turno
+    private String mes; // Ej: "Octubre 2026"
 
-    @Column(nullable = false, length = 50)
-    private String turno; // Ej: MAÑANA, TARDE, NOCHE
+    @Column(name = "nombre_completo", nullable = false)
+    private String nombreCompleto;
 
-    @Column(nullable = false, length = 100)
-    private String zona; // Ej: Estación Sur, Planta Principal, Pozos Sector 4
+    @Column(nullable = false)
+    private String zona; // "Zona Alta", "Zona Baja", "Zona Centro"
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "controlador_id", nullable = false)
-    private Usuario controlador; // Controlador asignado a la zona y turno
+    @Column(nullable = false)
+    private String turno; // "Mañana", "Tarde", "Noche"
 }
